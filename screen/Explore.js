@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { ActivityIndicator, TouchableOpacity, FlatList } from "react-native";
 import styled from "styled-components/native";
-import RNPickerSelect from 'react-native-picker-select';
+import RNPickerSelect from "react-native-picker-select";
 
 export default class Explore extends Component {
   constructor(props) {
@@ -25,21 +25,42 @@ export default class Explore extends Component {
       .catch(err => console.error(err))
       .finally(() => this.setState({ isLoading: false }));
   }
-  convertDataType(data){
 
-
+  convertDataType(data) {
+    const newData = data.map(x => ({
+      label: x.name,
+      value: x.url
+    }));
+    this.setState({ type: newData });
   }
 
   getPokeType() {
     fetch("https://pokeapi.co/api/v2/type")
       .then(res => res.json())
-      .then(data => this.setState({ type: data.results }))
+      .then(data => this.convertDataType(data.results))
       .catch(err => console.log(err));
   }
+
+  typeDataFilter(data){
+    const newData = data.map( x => x.pokemon ) 
+    this.setState({dataPoke: newData})
+    this.arrayHolder = newData
+  }
+
+  typeValueChange = value => {
+    fetch(value)
+      .then(res => res.json())
+      .then(data => this.typeDataFilter(data.pokemon)) 
+      .catch(err => console.error(err));
+  };
 
   componentDidMount() {
     this.getAllPoke();
     this.getPokeType();
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return nextProps.datePoke !== this.state.dataPoke
   }
 
   searchFilter = text => {
@@ -53,7 +74,8 @@ export default class Explore extends Component {
 
   render() {
     const { dataPoke, isLoading, searchText, type } = this.state;
-    console.log(type, "nih");
+    console.log(dataPoke, 'dataPokee')
+    dataPoke.length < 1 && <Text>data tidak ditemukan</Text>
     const Item = ({ title }) => {
       return (
         <TouchableOpacity onPress={() => console.log(title)}>
@@ -74,8 +96,9 @@ export default class Explore extends Component {
           />
         </TextinputContainer>
         <RNPickerSelect
-            onValueChange={(value) => console.log(value)}
-            items={type}
+          onValueChange={value => this.typeValueChange(value)}
+          items={type}
+          itemKey={(item, idx) => idx.toString()}
         />
         {isLoading ? (
           <ActivityIndicator />

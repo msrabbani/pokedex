@@ -5,7 +5,6 @@ export default function HomeScreen({navigation}) {
   return (
     <Container>
       <Text>Welcome to Pokedex!</Text>
-      <Text>To get started, edit App.js</Text>
       <Button title="Explore" onPress={()=>navigation.push('Explore')} />
     </Container>
   )
