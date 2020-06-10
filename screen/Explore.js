@@ -1,34 +1,45 @@
 import React, { Component } from "react";
-import { ActivityIndicator, TouchableOpacity, FlatList } from "react-native";
+import {
+  TouchableOpacity,
+  FlatList,
+  Modal,
+  TouchableHighlight
+} from "react-native";
 import styled from "styled-components/native";
 import RNPickerSelect from "react-native-picker-select";
+import Loader from '../components/loader'
+import { emptyObj, titleFormat, idFormat } from "../helper";
 
 export default class Explore extends Component {
   constructor(props) {
     super(props);
     this.state = {
       dataPoke: [],
+      maxData:null,
       searchText: "",
       type: [],
-      isLoading: true
+      pokeDetails: {},
+      modalVisible: false,
+      isLoading: false 
     };
     this.arrayHolder = [];
   }
 
   getAllPoke() {
+    this.setState({isLoading:true})
     fetch("https://pokeapi.co/api/v2/pokemon?limit=1000")
       .then(res => res.json())
       .then(data => {
-        this.setState({ dataPoke: data.results });
+        this.setState({ dataPoke: data.results, maxData: data.count });
         this.arrayHolder = data.results;
       })
       .catch(err => console.error(err))
-      .finally(() => this.setState({ isLoading: false }));
+      .finally(() => this.setState({ isLoading: false}));
   }
 
   convertDataType(data) {
     const newData = data.map(x => ({
-      label: x.name,
+      label: titleFormat(x.name),
       value: x.url
     }));
     this.setState({ type: newData });
@@ -41,16 +52,25 @@ export default class Explore extends Component {
       .catch(err => console.log(err));
   }
 
-  typeDataFilter(data){
-    const newData = data.map( x => x.pokemon ) 
-    this.setState({dataPoke: newData})
-    this.arrayHolder = newData
+  getPokeByName = (visible, name)=> {
+    this.setState({isLoading:true})
+    fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+      .then(res => res.json())
+      .then(data => this.setState({ pokeDetails: data }))
+      .catch(err => console.error(err))
+      .finally(()=> this.setState({ isLoading: false, modalVisible:visible }))
+  };
+
+  typeDataFilter(data) {
+    const newData = data.map(x => x.pokemon);
+    this.setState({ dataPoke: newData });
+    this.arrayHolder = newData;
   }
 
   typeValueChange = value => {
     fetch(value)
       .then(res => res.json())
-      .then(data => this.typeDataFilter(data.pokemon)) 
+      .then(data => this.typeDataFilter(data.pokemon))
       .catch(err => console.error(err));
   };
 
@@ -60,7 +80,7 @@ export default class Explore extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return nextProps.datePoke !== this.state.dataPoke
+    return nextProps.dataPoke !== this.state.dataPoke;
   }
 
   searchFilter = text => {
@@ -72,15 +92,31 @@ export default class Explore extends Component {
     this.setState({ dataPoke: newData });
   };
 
+  setModalVisible = (visible, title) => {
+    if (title) {
+      this.getPokeByName(visible, title);
+    }
+    this.setState({modalVisible:false})
+  };
+
   render() {
-    const { dataPoke, isLoading, searchText, type } = this.state;
-    console.log(dataPoke, 'dataPokee')
-    dataPoke.length < 1 && <Text>data tidak ditemukan</Text>
+    const {
+      dataPoke,
+      maxData,
+      pokeDetails,
+      isLoading,
+      searchText,
+      type,
+      modalVisible
+    } = this.state;
+    //console.log(dataPoke.length);
+    //console.log(pokeDetails.sprites &&  pokeDetails.sprites.front_default, 'iiiiii')
+    //console.log(pokeDetails && pokeDetails.name && titleFormat(pokeDetails.name))
     const Item = ({ title }) => {
       return (
-        <TouchableOpacity onPress={() => console.log(title)}>
+        <TouchableOpacity onPress={() => this.setModalVisible(true, title)}>
           <ItemContainer>
-            <Text>{title}</Text>
+            <Text>{titleFormat(title)}</Text>
           </ItemContainer>
         </TouchableOpacity>
       );
@@ -100,15 +136,38 @@ export default class Explore extends Component {
           items={type}
           itemKey={(item, idx) => idx.toString()}
         />
-        {isLoading ? (
-          <ActivityIndicator />
-        ) : (
+            <Loader loading={isLoading}/>
           <FlatList
             data={dataPoke}
             renderItem={({ item }) => <Item title={item.name} />}
             keyExtractor={(item, idx) => idx.toString()}
           />
-        )}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            Alert.alert("Modal has been closed.");
+          }}
+        >
+            <ModalContainer>
+              <Text>
+                 {pokeDetails.id && idFormat(pokeDetails.id, maxData)} {pokeDetails.name && titleFormat(pokeDetails.name)}
+              </Text>
+              <ImageStyle
+                source={{
+                  uri: pokeDetails.sprites && pokeDetails.sprites.front_default
+                }}
+              />
+              <TouchableHighlight
+                onPress={() => {
+                  this.setModalVisible(!modalVisible);
+                }}
+              >
+                <Text>Hide Modal</Text>
+              </TouchableHighlight>
+            </ModalContainer>
+        </Modal>
       </Container>
     );
   }
@@ -144,4 +203,20 @@ const TextinputStyle = styled.TextInput`
   margin-left: 16;
   border-bottom-color: #ffffff;
   flex: 1;
+`;
+const ModalContainer = styled.View`
+  margin: 20px;
+  background-color: white;
+  border-radius: 10;
+  padding: 35px;
+  align-items: center;
+  shadow-color: #000;
+  shadow-opacity: 0.25;
+  shadow-radius: 3.84;
+  elevation: 5;
+`;
+const ImageStyle = styled.Image`
+  width: 150;
+  height: 150;
+  border-radius: 30;
 `;
