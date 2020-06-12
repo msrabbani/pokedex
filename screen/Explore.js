@@ -101,7 +101,7 @@ export default class Explore extends Component {
     this.setState({ modalVisible: false });
   };
 
-    render() {
+  render() {
     const {
       dataPoke,
       maxData,
@@ -111,9 +111,6 @@ export default class Explore extends Component {
       type,
       modalVisible
     } = this.state;
-    //console.log(pokeDetails, "==");
-    //console.log(pokeDetails.sprites &&  pokeDetails.sprites.front_default, 'iiiiii')
-    //console.log(pokeDetails && pokeDetails.name && titleFormat(pokeDetails.name))
     const Item = ({ title }) => {
       return (
         <TouchableOpacity onPress={() => this.setModalVisible(true, title)}>
@@ -126,18 +123,22 @@ export default class Explore extends Component {
 
     return (
       <Container>
-        <TextinputContainer>
-          <TextinputStyle
-            onChangeText={text => this.searchFilter(text)}
-            underlineColorAndroid="transparent"
-            placeholder="Search Pokemon"
-          />
-        </TextinputContainer>
-        <RNPickerSelect
-          onValueChange={value => this.typeValueChange(value)}
-          items={type}
-          itemKey={(item, idx) => idx.toString()}
-        />
+        <HeadContainer>
+          <TextInputWrapper>
+            <TextinputStyle
+              onChangeText={text => this.searchFilter(text)}
+              underlineColorAndroid="transparent"
+              placeholder="Search Pokemon"
+            />
+          </TextInputWrapper>
+          <PickerWrapper>
+            <RNPickerSelect
+              onValueChange={value => this.typeValueChange(value)}
+              items={type}
+              itemKey={(item, idx) => idx.toString()}
+            />
+          </PickerWrapper>
+        </HeadContainer>
         <Loader loading={isLoading} />
         <FlatList
           data={dataPoke}
@@ -212,6 +213,16 @@ const Container = styled.View`
   background-color: #ebf0f7;
   padding: 10px;
 `;
+const HeadContainer = styled.View`
+  flex-direction: row;
+  padding: 5px;
+`;
+const PickerWrapper = styled.View`
+  background-color: #fff5ee;
+  border-radius: 10px;
+  justify-content:center;
+  padding: 10px;
+`
 const ListWraper = styled.View`
   background-color: white;
 `;
@@ -223,7 +234,7 @@ const ItemContainer = styled.View`
   border-bottom-width: 1px;
   padding: 10px;
 `;
-const TextinputContainer = styled.View`
+const TextInputWrapper = styled.View`
   border-bottom-color: #f5fcff;
   background-color: #ffffff;
   border-radius: 10;
@@ -231,6 +242,7 @@ const TextinputContainer = styled.View`
   width: 50%;
   flex-direction: row;
   align-items: center;
+  margin-right:10px;
 `;
 const TextinputStyle = styled.TextInput`
   height: 35;
@@ -281,10 +293,9 @@ const InfoValue = styled.Text`
   font-size: 22px;
   font-weight: 600;
 `;
-const TypeWrapper = styled.View`
-`;
+const TypeWrapper = styled.View``;
 const ButtonStyled = styled.TouchableOpacity`
-  padding: 10px;
-  background-color:pink;
-  border-radius:10px;
-`
+  padding: 10px 35px 10px;
+  background-color: pink;
+  border-radius: 10px;
+`;
